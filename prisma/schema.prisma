@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Links {
+  id        String     @id @default(cuid())
+  url       String
+  slug      String     @unique
+  createdBy User?      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String
+  tags      LinkTags[]
+
+  @@index(slug)
+  @@index([creatorId])
+}
+
+model Tags {
+  id        String     @id @default(cuid())
+  name      String
+  color     String
+  type      String     @default("public")
+  password  String?
+  createdBy User?      @relation(fields: [creatorId], references: [id])
+  creatorId String
+  links     LinkTags[]
+
+  @@index([creatorId])
+}
+
+model LinkTags {
+  link   Links  @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId String
+  tag    Tags   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  String
+
+  @@id([linkId, tagId])
+}
+
+model User {
+  id         String  @id @default(cuid())
+  name       String?
+  username   String?
+  email      String? @unique
+  password   String?
+  limitLinks Int     @default(30)
+  links      Links[]
+  tags       Tags[]
+}
